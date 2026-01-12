@@ -14,7 +14,6 @@ namespace RDBMS.Engine
         {
             Name = name;
 
-            // Initialize Tables with the DB Name prefix
             var userCols = new List<ColumnDef> 
             { 
                 new ColumnDef { Name = "id", Type = DbType.Int, IsPrimaryKey = true },
@@ -31,7 +30,6 @@ namespace RDBMS.Engine
             };
             Tables.Add("orders", new Table(Name, "orders", orderCols));
 
-            // Seed Initial Data if empty
             if (Tables["users"].SelectAll().Count == 0)
             {
                 ExecuteSql("INSERT INTO users VALUES (001, \"John Doe\", 25)");
@@ -49,6 +47,8 @@ namespace RDBMS.Engine
 
                 switch (command)
                 {
+                    case "CREATE": return HandleCreate(sql); // New Handler
+                    case "DROP": return HandleDrop(sql);     // New Handler
                     case "INSERT": return HandleInsert(sql);
                     case "SELECT": return HandleSelect(sql);
                     case "UPDATE": return HandleUpdate(sql);
@@ -61,6 +61,69 @@ namespace RDBMS.Engine
                 return $"Error: {ex.Message}";
             }
         }
+
+        // --- NEW HANDLERS ---
+        private string HandleCreate(string sql)
+        {
+            // Syntax: CREATE TABLE [name] (col1 type, col2 type)
+            try {
+                var openParen = sql.IndexOf('(');
+                var closeParen = sql.LastIndexOf(')');
+                
+                if (openParen == -1 || closeParen == -1) 
+                    return "Syntax error. Usage: CREATE TABLE [name] (col type, ...)";
+
+                var headerPart = sql.Substring(0, openParen).Trim();
+                var bodyPart = sql.Substring(openParen + 1, closeParen - openParen - 1);
+                
+                var headerSplit = headerPart.Split(' ');
+                var tableName = headerSplit.Last().Trim();
+
+                if (Tables.ContainsKey(tableName)) return "Table already exists.";
+
+                var colDefs = bodyPart.Split(',');
+                var columns = new List<ColumnDef>();
+                
+                foreach(var col in colDefs)
+                {
+                    var def = col.Trim().Split(new[]{' '}, StringSplitOptions.RemoveEmptyEntries);
+                    if (def.Length < 2) continue;
+
+                    var name = def[0];
+                    var typeStr = def[1].ToLower();
+                    
+                    var type = typeStr == "int" ? DbType.Int : DbType.String;
+                    columns.Add(new ColumnDef { Name = name, Type = type });
+                }
+
+                // Enforce ID presence for this engine implementation
+                if(!columns.Any(c => c.Name.ToLower() == "id" && c.Type == DbType.Int))
+                {
+                    return "Error: Table must include an 'id' column of type 'int'.";
+                }
+
+                Tables.Add(tableName, new Table(Name, tableName, columns));
+                return $"Table '{tableName}' created successfully.";
+            }
+            catch (Exception ex) { return $"Create Error: {ex.Message}"; }
+        }
+
+        private string HandleDrop(string sql)
+        {
+            // Syntax: DROP TABLE [name]
+            var parts = sql.Split(new[]{' '}, StringSplitOptions.RemoveEmptyEntries);
+            if (parts.Length < 3) return "Syntax error. Usage: DROP TABLE [name]";
+
+            var tableName = parts[2].Trim();
+            
+            if (!Tables.ContainsKey(tableName)) return "Table not found.";
+            
+            Tables[tableName].Drop();
+            Tables.Remove(tableName);
+            
+            return $"Table '{tableName}' dropped successfully.";
+        }
+        // --------------------
 
         private string HandleInsert(string sql)
         {
@@ -96,7 +159,6 @@ namespace RDBMS.Engine
             var parts = sql.Split(' ');
             var tableName = parts.Length > 3 ? parts[3] : "";
             
-            // Basic error checking
             if(string.IsNullOrEmpty(tableName) || !Tables.ContainsKey(tableName)) 
                 return "Table not found. Usage: SELECT * FROM [table]";
 
@@ -118,7 +180,6 @@ namespace RDBMS.Engine
 
         private string HandleDelete(string sql)
         {
-            // Syntax: DELETE FROM <table> WHERE id=<id>
             try 
             {
                 var fromIndex = sql.ToUpper().IndexOf("FROM");
@@ -132,7 +193,6 @@ namespace RDBMS.Engine
 
                 if (!Tables.ContainsKey(tableName)) return "Table not found.";
 
-                // Parse ID
                 var parts = whereClause.Split('=');
                 if (parts[0].Trim().ToUpper() != "ID") return "Only deletion by ID is supported.";
                 if (!int.TryParse(parts[1].Trim(), out int id)) return "Invalid ID format.";
@@ -145,7 +205,6 @@ namespace RDBMS.Engine
 
         private string HandleUpdate(string sql)
         {
-            // Syntax: UPDATE <table> SET col=val, col2=val2 WHERE id=<id>
             try
             {
                 var updateIndex = sql.ToUpper().IndexOf("UPDATE");
@@ -162,7 +221,6 @@ namespace RDBMS.Engine
                 if (!Tables.ContainsKey(tableName)) return "Table not found.";
                 var table = Tables[tableName];
 
-                // Parse ID
                 var idParts = whereClause.Split('=');
                 if (idParts[0].Trim().ToUpper() != "ID") return "Only update by ID is supported.";
                 if (!int.TryParse(idParts[1].Trim(), out int id)) return "Invalid ID format.";
@@ -170,7 +228,6 @@ namespace RDBMS.Engine
                 var row = table.SelectById(id);
                 if (row == null) return "Row not found.";
 
-                // Parse Assignments
                 var assignments = setClause.Split(',');
                 foreach(var assign in assignments)
                 {
@@ -180,7 +237,7 @@ namespace RDBMS.Engine
 
                     var colDef = table.Schema.Columns.FirstOrDefault(c => c.Name == colName);
                     if (colDef == null) return $"Column '{colName}' not found.";
-                    if (colDef.Name == "id") continue; // Cannot change ID
+                    if (colDef.Name == "id") continue; 
 
                     if (colDef.Type == DbType.Int) row.Data[colName] = int.Parse(valStr);
                     else row.Data[colName] = valStr;

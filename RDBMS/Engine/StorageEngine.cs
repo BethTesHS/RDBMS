@@ -10,11 +10,9 @@ namespace RDBMS.Engine
         private readonly string _filePath;
         public Dictionary<int, long> PrimaryKeyIndex { get; private set; } = new();
 
-        // CHANGED: Constructor now accepts dbName to prefix the file
         public Table(string dbName, string tableName, List<ColumnDef> columns)
         {
             Schema = new TableSchema { Name = tableName, Columns = columns };
-            // Simple sanitization to prevent directory traversal
             var safeDbName = dbName.Replace("..", "").Replace("/", "").Replace("\\", "");
             var safeTableName = tableName.Replace("..", "").Replace("/", "").Replace("\\", "");
             
@@ -28,6 +26,16 @@ namespace RDBMS.Engine
         {
             using var fs = new FileStream(_filePath, FileMode.Create);
         }
+
+        // --- NEW METHOD ---
+        public void Drop()
+        {
+            if (File.Exists(_filePath))
+            {
+                File.Delete(_filePath);
+            }
+        }
+        // ------------------
 
         private void LoadIndex()
         {
@@ -81,8 +89,6 @@ namespace RDBMS.Engine
             PrimaryKeyIndex[row.Id] = pos;
         }
 
-        // --- NEW CRUD OPERATIONS ---
-
         public void Delete(int id)
         {
             if (!PrimaryKeyIndex.ContainsKey(id))
@@ -90,28 +96,23 @@ namespace RDBMS.Engine
 
             long offset = PrimaryKeyIndex[id];
 
-            // Open in Write mode to update the specific flag
             using var fs = new FileStream(_filePath, FileMode.Open, FileAccess.Write);
             using var writer = new BinaryWriter(fs);
 
             fs.Seek(offset, SeekOrigin.Begin);
-            writer.Write(true); // Set IsDeleted = true
+            writer.Write(true); 
 
             PrimaryKeyIndex.Remove(id);
         }
 
         public void Update(Row row)
         {
-            // Strategy: Mark old record as deleted, append new record.
-            // This avoids complexity with overwriting variable length strings in-place.
             if (!PrimaryKeyIndex.ContainsKey(row.Id))
                 throw new Exception($"Record with ID {row.Id} not found.");
 
             Delete(row.Id);
             Insert(row);
         }
-        
-        // ---------------------------
 
         public Row? SelectById(int id)
         {

@@ -53,9 +53,8 @@
 
         <div id="debug" class="section">
             <h2 id="debugTitle">Table View (default)</h2>
-            <div style="margin-bottom: 20px;">
-                <button class="btn btn-outline" onclick="loadTable('users')" style="font-size: 0.8rem; padding: 5px 10px;">Users Table</button>
-                <button class="btn btn-outline" onclick="loadTable('orders')" style="font-size: 0.8rem; padding: 5px 10px;">Orders Table</button>
+            <div style="margin-bottom: 20px;" id="tableList">
+                <span style="color: #64748b;">Loading tables...</span>
             </div>
             <div id="tableContainer">
                 <p style="color: #64748b;">Select a table above to view raw data.</p>
@@ -112,6 +111,7 @@
             document.getElementById('debugTitle').textContent = `Table View (${name})`;
             document.getElementById('output').innerText += `\n[Switched to ${name}]\n`;
             fetchDbs(); // re-render list
+            refreshTables(); // Fetch tables for the new DB
         }
 
         // --- Console ---
@@ -134,6 +134,10 @@
                     });
                     const text = await res.json(); // The API returns string result as JSON string
                     out.innerText += text + "\n";
+
+                    // Refresh table list if command was successful (could be CREATE/DROP)
+                    if(res.ok) refreshTables(); 
+
                 } catch (err) {
                     out.innerText += "Error connecting to server.\n";
                 }
@@ -144,6 +148,33 @@
         });
 
         // --- Table View ---
+        
+        // NEW FUNCTION: Fetch table names and generate buttons
+        async function refreshTables() {
+            const container = document.getElementById('tableList');
+            try {
+                const res = await fetch(`/api/dbs/${currentDb}/tables`);
+                if(res.ok) {
+                    const tables = await res.json();
+                    container.innerHTML = '';
+                    if(tables.length === 0) {
+                        container.innerHTML = '<span style="color: #64748b;">No tables found.</span>';
+                        return;
+                    }
+                    tables.forEach(t => {
+                        const btn = document.createElement('button');
+                        btn.className = 'btn btn-outline';
+                        btn.style = 'font-size: 0.8rem; padding: 5px 10px; margin-right: 5px; margin-bottom: 5px;';
+                        btn.textContent = t;
+                        btn.onclick = () => loadTable(t);
+                        container.appendChild(btn);
+                    });
+                }
+            } catch (err) {
+                console.error("Failed to fetch tables", err);
+            }
+        }
+
         async function loadTable(tableName) {
             const container = document.getElementById('tableContainer');
             container.innerHTML = 'Loading...';
@@ -182,6 +213,7 @@
 
         // Init
         fetchDbs();
+        refreshTables();
     </script>
 </body>
 </html>
