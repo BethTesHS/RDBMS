@@ -34,9 +34,9 @@ namespace RDBMS.Engine
             // Seed Initial Data if empty
             if (Tables["users"].SelectAll().Count == 0)
             {
-                ExecuteSql("INSERT INTO users VALUES (101, \"John Doe\", 25)");
-                ExecuteSql("INSERT INTO users VALUES (102, \"Jane Smith\", 30)");
-                ExecuteSql("INSERT INTO orders VALUES (501, 101, \"Laptop\")");
+                ExecuteSql("INSERT INTO users VALUES (001, \"John Doe\", 25)");
+                ExecuteSql("INSERT INTO users VALUES (002, \"Jane Smith\", 30)");
+                ExecuteSql("INSERT INTO orders VALUES (101, 001, \"Laptop\")");
             }
         }
 
@@ -51,6 +51,8 @@ namespace RDBMS.Engine
                 {
                     case "INSERT": return HandleInsert(sql);
                     case "SELECT": return HandleSelect(sql);
+                    case "UPDATE": return HandleUpdate(sql);
+                    case "DELETE": return HandleDelete(sql);
                     default: return "Unknown command.";
                 }
             }
@@ -112,6 +114,82 @@ namespace RDBMS.Engine
 
             var rows = table.SelectAll();
             return FormatRows(rows);
+        }
+
+        private string HandleDelete(string sql)
+        {
+            // Syntax: DELETE FROM <table> WHERE id=<id>
+            try 
+            {
+                var fromIndex = sql.ToUpper().IndexOf("FROM");
+                var whereIndex = sql.ToUpper().IndexOf("WHERE");
+
+                if (fromIndex == -1 || whereIndex == -1)
+                    return "Syntax error. Usage: DELETE FROM <table> WHERE id=<id>";
+
+                var tableName = sql.Substring(fromIndex + 4, whereIndex - (fromIndex + 4)).Trim();
+                var whereClause = sql.Substring(whereIndex + 5).Trim();
+
+                if (!Tables.ContainsKey(tableName)) return "Table not found.";
+
+                // Parse ID
+                var parts = whereClause.Split('=');
+                if (parts[0].Trim().ToUpper() != "ID") return "Only deletion by ID is supported.";
+                if (!int.TryParse(parts[1].Trim(), out int id)) return "Invalid ID format.";
+
+                Tables[tableName].Delete(id);
+                return "Row deleted successfully.";
+            }
+            catch(Exception ex) { return $"Delete Error: {ex.Message}"; }
+        }
+
+        private string HandleUpdate(string sql)
+        {
+            // Syntax: UPDATE <table> SET col=val, col2=val2 WHERE id=<id>
+            try
+            {
+                var updateIndex = sql.ToUpper().IndexOf("UPDATE");
+                var setIndex = sql.ToUpper().IndexOf(" SET ");
+                var whereIndex = sql.ToUpper().IndexOf(" WHERE ");
+
+                if (updateIndex == -1 || setIndex == -1 || whereIndex == -1)
+                    return "Syntax error. Usage: UPDATE <table> SET col=val WHERE id=<id>";
+
+                var tableName = sql.Substring(updateIndex + 6, setIndex - (updateIndex + 6)).Trim();
+                var setClause = sql.Substring(setIndex + 5, whereIndex - (setIndex + 5)).Trim();
+                var whereClause = sql.Substring(whereIndex + 7).Trim();
+
+                if (!Tables.ContainsKey(tableName)) return "Table not found.";
+                var table = Tables[tableName];
+
+                // Parse ID
+                var idParts = whereClause.Split('=');
+                if (idParts[0].Trim().ToUpper() != "ID") return "Only update by ID is supported.";
+                if (!int.TryParse(idParts[1].Trim(), out int id)) return "Invalid ID format.";
+
+                var row = table.SelectById(id);
+                if (row == null) return "Row not found.";
+
+                // Parse Assignments
+                var assignments = setClause.Split(',');
+                foreach(var assign in assignments)
+                {
+                    var parts = assign.Split('=');
+                    var colName = parts[0].Trim();
+                    var valStr = parts[1].Trim().Trim('\'', '"');
+
+                    var colDef = table.Schema.Columns.FirstOrDefault(c => c.Name == colName);
+                    if (colDef == null) return $"Column '{colName}' not found.";
+                    if (colDef.Name == "id") continue; // Cannot change ID
+
+                    if (colDef.Type == DbType.Int) row.Data[colName] = int.Parse(valStr);
+                    else row.Data[colName] = valStr;
+                }
+
+                table.Update(row);
+                return "Row updated successfully.";
+            }
+            catch(Exception ex) { return $"Update Error: {ex.Message}"; }
         }
 
         private string HandleJoin(string sql)

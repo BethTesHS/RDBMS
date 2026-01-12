@@ -81,6 +81,38 @@ namespace RDBMS.Engine
             PrimaryKeyIndex[row.Id] = pos;
         }
 
+        // --- NEW CRUD OPERATIONS ---
+
+        public void Delete(int id)
+        {
+            if (!PrimaryKeyIndex.ContainsKey(id))
+                throw new Exception($"Record with ID {id} not found.");
+
+            long offset = PrimaryKeyIndex[id];
+
+            // Open in Write mode to update the specific flag
+            using var fs = new FileStream(_filePath, FileMode.Open, FileAccess.Write);
+            using var writer = new BinaryWriter(fs);
+
+            fs.Seek(offset, SeekOrigin.Begin);
+            writer.Write(true); // Set IsDeleted = true
+
+            PrimaryKeyIndex.Remove(id);
+        }
+
+        public void Update(Row row)
+        {
+            // Strategy: Mark old record as deleted, append new record.
+            // This avoids complexity with overwriting variable length strings in-place.
+            if (!PrimaryKeyIndex.ContainsKey(row.Id))
+                throw new Exception($"Record with ID {row.Id} not found.");
+
+            Delete(row.Id);
+            Insert(row);
+        }
+        
+        // ---------------------------
+
         public Row? SelectById(int id)
         {
             if (!PrimaryKeyIndex.ContainsKey(id)) return null;
