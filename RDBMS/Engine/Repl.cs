@@ -25,7 +25,7 @@ namespace RDBMS.Engine
 
                 while (true)
                 {
-                    Console.Write("SQL> ");
+                    Console.Write("SQL-ly> ");
                     var input = Console.ReadLine();
                     if (string.IsNullOrWhiteSpace(input)) continue;
                     if (input == "exit") break;

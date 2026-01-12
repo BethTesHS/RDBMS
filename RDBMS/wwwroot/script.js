@@ -41,9 +41,13 @@ async function createNewDb() {
 
 function switchDb(name) {
     currentDb = name;
-    document.getElementById('consoleTitle').textContent = `Console (${name})`;
-    document.getElementById('debugTitle').textContent = `Table View (${name})`;
+    document.getElementById('consoleTitle').textContent = `${name}`;
+    document.getElementById('debugTitle').textContent = `${name}`;
     document.getElementById('output').innerText += `\n[Switched to ${name}]\n`;
+    
+    // Clear the table data view so previous DB data doesn't persist
+    document.getElementById('tableContainer').innerHTML = '<p style="color: #64748b;">Select a table above to view raw data.</p>';
+
     fetchDbs(); 
     refreshTables();
 }
