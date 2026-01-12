@@ -7,7 +7,7 @@ function showSection(id) {
     document.getElementById(id).classList.add('active');
     
     // Highlight nav
-    const navIndex = ['home', 'console', 'debug'].indexOf(id);
+    const navIndex = ['home', 'tutorial', 'console', 'debug'].indexOf(id);
     if(navIndex >= 0) document.querySelectorAll('.tab-item')[navIndex].classList.add('active');
 }
 
@@ -44,10 +44,8 @@ function switchDb(name) {
     document.getElementById('consoleTitle').textContent = `Console (${name})`;
     document.getElementById('debugTitle').textContent = `Table View (${name})`;
     document.getElementById('output').innerText += `\n[Switched to ${name}]\n`;
-    fetchDbs(); // re-render list
-    if (typeof refreshTables === "function") {
-        refreshTables(); // Fetch tables for the new DB
-    }
+    fetchDbs(); 
+    refreshTables();
 }
 
 // --- Console ---
@@ -71,13 +69,11 @@ document.addEventListener('DOMContentLoaded', () => {
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify(sql)
                     });
-                    const text = await res.json(); // The API returns string result as JSON string
+                    const text = await res.json();
                     out.innerText += text + "\n";
 
                     // Refresh table list if command was successful (could be CREATE/DROP)
-                    if(res.ok && typeof refreshTables === "function") {
-                        refreshTables(); 
-                    }
+                    if(res.ok) refreshTables(); 
 
                 } catch (err) {
                     out.innerText += "Error connecting to server.\n";
@@ -91,17 +87,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Init
     fetchDbs();
-    if (typeof refreshTables === "function") {
-        refreshTables();
-    }
+    refreshTables();
 });
 
 // --- Table View ---
 
-// Fetch table names and generate buttons
 async function refreshTables() {
     const container = document.getElementById('tableList');
-    if (!container) return; // Guard clause in case element is missing
+    if (!container) return;
 
     try {
         const res = await fetch(`/api/dbs/${currentDb}/tables`);
@@ -143,7 +136,6 @@ async function loadTable(tableName) {
             return;
         }
 
-        // Build HTML Table dynamically
         const cols = Object.keys(data[0]);
         let html = '<table><thead><tr>';
         cols.forEach(c => html += `<th>${c}</th>`);
