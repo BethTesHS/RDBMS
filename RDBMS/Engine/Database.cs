@@ -3,21 +3,17 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace RDBMS.Engine
-{
-    public class Database
-    {
+namespace RDBMS.Engine {
+    public class Database {
         public string Name { get; private set; }
         public Dictionary<string, Table> Tables { get; set; } = new();
 
-        public Database(string name = "default")
-        {
+        public Database(string name = "default") {
             Name = name;
 
-            if (Name == "default")
-            {
-                var userCols = new List<ColumnDef> 
-                { 
+            if (Name == "default") {
+                var userCols = new List<ColumnDef>
+                {
                     new ColumnDef { Name = "id", Type = DbType.Int, IsPrimaryKey = true },
                     new ColumnDef { Name = "username", Type = DbType.String },
                     new ColumnDef { Name = "age", Type = DbType.Int }
@@ -27,13 +23,12 @@ namespace RDBMS.Engine
                 var orderCols = new List<ColumnDef>
                 {
                     new ColumnDef { Name = "id", Type = DbType.Int, IsPrimaryKey = true },
-                    new ColumnDef { Name = "user_id", Type = DbType.Int }, 
+                    new ColumnDef { Name = "user_id", Type = DbType.Int },
                     new ColumnDef { Name = "item", Type = DbType.String }
                 };
                 Tables.Add("orders", new Table(Name, "orders", orderCols));
 
-                if (Tables["users"].SelectAll().Count == 0)
-                {
+                if (Tables["users"].SelectAll().Count == 0) {
                     ExecuteSql("INSERT INTO users VALUES (001, \"John Doe\", 25)");
                     ExecuteSql("INSERT INTO users VALUES (002, \"Jane Smith\", 30)");
                     ExecuteSql("INSERT INTO orders VALUES (101, 001, \"Laptop\")");
@@ -41,15 +36,12 @@ namespace RDBMS.Engine
             }
         }
 
-        public string ExecuteSql(string sql)
-        {
-            try 
-            {
+        public string ExecuteSql(string sql) {
+            try {
                 var parts = sql.Trim().Split(' ');
                 var command = parts[0].ToUpper();
 
-                switch (command)
-                {
+                switch (command) {
                     case "CREATE": return HandleCreate(sql);
                     case "DROP": return HandleDrop(sql);
                     case "INSERT": return HandleInsert(sql);
@@ -59,25 +51,23 @@ namespace RDBMS.Engine
                     default: return "Unknown command.";
                 }
             }
-            catch (Exception ex)
-            {
+            catch (Exception ex) {
                 return $"Error: {ex.Message}";
             }
         }
 
-        private string HandleCreate(string sql)
-        {
+        private string HandleCreate(string sql) {
             // Syntax: CREATE TABLE [name] (col1 type [UNIQUE], col2 type)
             try {
                 var openParen = sql.IndexOf('(');
                 var closeParen = sql.LastIndexOf(')');
-                
-                if (openParen == -1 || closeParen == -1) 
+
+                if (openParen == -1 || closeParen == -1)
                     return "Syntax error. Usage: CREATE TABLE [name] (col type [UNIQUE], ...)";
 
                 var headerPart = sql.Substring(0, openParen).Trim();
                 var bodyPart = sql.Substring(openParen + 1, closeParen - openParen - 1);
-                
+
                 var headerSplit = headerPart.Split(' ');
                 var tableName = headerSplit.Last().Trim();
 
@@ -85,15 +75,14 @@ namespace RDBMS.Engine
 
                 var colDefs = bodyPart.Split(',');
                 var columns = new List<ColumnDef>();
-                
-                foreach(var col in colDefs)
-                {
-                    var def = col.Trim().Split(new[]{' '}, StringSplitOptions.RemoveEmptyEntries);
+
+                foreach (var col in colDefs) {
+                    var def = col.Trim().Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
                     if (def.Length < 2) continue;
 
                     var name = def[0];
                     var typeStr = def[1].ToLower();
-                    
+
                     // Check for UNIQUE constraint
                     bool isUnique = def.Length > 2 && def[2].Equals("UNIQUE", StringComparison.OrdinalIgnoreCase);
 
@@ -102,8 +91,7 @@ namespace RDBMS.Engine
                 }
 
                 // Enforce ID presence for this engine implementation
-                if(!columns.Any(c => c.Name.ToLower() == "id" && c.Type == DbType.Int))
-                {
+                if (!columns.Any(c => c.Name.ToLower() == "id" && c.Type == DbType.Int)) {
                     return "Error: Table must include an 'id' column of type 'int'.";
                 }
 
@@ -113,25 +101,23 @@ namespace RDBMS.Engine
             catch (Exception ex) { return $"Create Error: {ex.Message}"; }
         }
 
-        private string HandleDrop(string sql)
-        {
+        private string HandleDrop(string sql) {
             // Syntax: DROP TABLE [name]
-            var parts = sql.Split(new[]{' '}, StringSplitOptions.RemoveEmptyEntries);
+            var parts = sql.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
             if (parts.Length < 3) return "Syntax error. Usage: DROP TABLE [name]";
 
             var tableName = parts[2].Trim();
-            
+
             if (!Tables.ContainsKey(tableName)) return "Table not found.";
-            
+
             Tables[tableName].Drop();
             Tables.Remove(tableName);
-            
+
             return $"Table '{tableName}' dropped successfully.";
         }
         // --------------------
 
-        private string HandleInsert(string sql)
-        {
+        private string HandleInsert(string sql) {
             var tableName = sql.Split(new[] { "INTO ", " VALUES" }, StringSplitOptions.None)[1].Trim();
             var valuesPart = sql.Split("VALUES")[1].Trim().Trim('(', ')');
             var values = valuesPart.Split(',');
@@ -140,16 +126,15 @@ namespace RDBMS.Engine
 
             var table = Tables[tableName];
             var row = new Row();
-            
+
             int valIndex = 0;
-            foreach(var col in table.Schema.Columns)
-            {
+            foreach (var col in table.Schema.Columns) {
                 var valStr = values[valIndex].Trim().Trim('"', '\'');
                 if (col.Name == "id") row.Id = int.Parse(valStr);
-                
+
                 if (col.Type == DbType.Int) row.Data[col.Name] = int.Parse(valStr);
                 else row.Data[col.Name] = valStr;
-                
+
                 valIndex++;
             }
 
@@ -157,23 +142,20 @@ namespace RDBMS.Engine
             return "Row inserted successfully.";
         }
 
-        private string HandleSelect(string sql)
-        {
+        private string HandleSelect(string sql) {
             if (sql.ToUpper().Contains(" JOIN ")) return HandleJoin(sql);
 
             var parts = sql.Split(' ');
             var tableName = parts.Length > 3 ? parts[3] : "";
-            
-            if(string.IsNullOrEmpty(tableName) || !Tables.ContainsKey(tableName)) 
+
+            if (string.IsNullOrEmpty(tableName) || !Tables.ContainsKey(tableName))
                 return "Table not found. Usage: SELECT * FROM [table]";
 
             var table = Tables[tableName];
 
-            if (sql.ToUpper().Contains("WHERE ID="))
-            {
+            if (sql.ToUpper().Contains("WHERE ID=")) {
                 var idStr = sql.Split('=')[1].Trim();
-                if (int.TryParse(idStr, out int id))
-                {
+                if (int.TryParse(idStr, out int id)) {
                     var row = table.SelectById(id);
                     return row == null ? "No results." : FormatRow(row);
                 }
@@ -183,10 +165,8 @@ namespace RDBMS.Engine
             return FormatRows(rows);
         }
 
-        private string HandleDelete(string sql)
-        {
-            try 
-            {
+        private string HandleDelete(string sql) {
+            try {
                 var fromIndex = sql.ToUpper().IndexOf("FROM");
                 var whereIndex = sql.ToUpper().IndexOf("WHERE");
 
@@ -205,13 +185,11 @@ namespace RDBMS.Engine
                 Tables[tableName].Delete(id);
                 return "Row deleted successfully.";
             }
-            catch(Exception ex) { return $"Delete Error: {ex.Message}"; }
+            catch (Exception ex) { return $"Delete Error: {ex.Message}"; }
         }
 
-        private string HandleUpdate(string sql)
-        {
-            try
-            {
+        private string HandleUpdate(string sql) {
+            try {
                 var updateIndex = sql.ToUpper().IndexOf("UPDATE");
                 var setIndex = sql.ToUpper().IndexOf(" SET ");
                 var whereIndex = sql.ToUpper().IndexOf(" WHERE ");
@@ -234,15 +212,14 @@ namespace RDBMS.Engine
                 if (row == null) return "Row not found.";
 
                 var assignments = setClause.Split(',');
-                foreach(var assign in assignments)
-                {
+                foreach (var assign in assignments) {
                     var parts = assign.Split('=');
                     var colName = parts[0].Trim();
                     var valStr = parts[1].Trim().Trim('\'', '"');
 
                     var colDef = table.Schema.Columns.FirstOrDefault(c => c.Name == colName);
                     if (colDef == null) return $"Column '{colName}' not found.";
-                    if (colDef.Name == "id") continue; 
+                    if (colDef.Name == "id") continue;
 
                     if (colDef.Type == DbType.Int) row.Data[colName] = int.Parse(valStr);
                     else row.Data[colName] = valStr;
@@ -251,23 +228,21 @@ namespace RDBMS.Engine
                 table.Update(row);
                 return "Row updated successfully.";
             }
-            catch(Exception ex) { return $"Update Error: {ex.Message}"; }
+            catch (Exception ex) { return $"Update Error: {ex.Message}"; }
         }
 
-        private string HandleJoin(string sql)
-        {
+        private string HandleJoin(string sql) {
             // Syntax: SELECT * FROM t1 JOIN t2 ON t1.col = t2.col
-            try
-            {
+            try {
                 var joinSplit = sql.Split(new[] { " JOIN ", " ON " }, StringSplitOptions.None);
-                
+
                 if (joinSplit.Length < 3) return "Syntax error. Usage: SELECT * FROM t1 JOIN t2 ON t1.c1 = t2.c2";
 
                 var table1Name = joinSplit[0].Split("FROM")[1].Trim();
                 var table2Name = joinSplit[1].Trim();
                 var condition = joinSplit[2].Trim(); // e.g., "users.id = orders.user_id"
-                
-                if(!Tables.ContainsKey(table1Name) || !Tables.ContainsKey(table2Name))
+
+                if (!Tables.ContainsKey(table1Name) || !Tables.ContainsKey(table2Name))
                     return "One or more tables not found.";
 
                 var t1 = Tables[table1Name];
@@ -275,7 +250,7 @@ namespace RDBMS.Engine
 
                 // Parse Condition
                 var condParts = condition.Split('=');
-                if(condParts.Length != 2) return "Invalid JOIN condition. Use '='";
+                if (condParts.Length != 2) return "Invalid JOIN condition. Use '='";
 
                 var leftOp = condParts[0].Trim().Split('.'); // users.id
                 var rightOp = condParts[1].Trim().Split('.'); // orders.user_id
@@ -291,37 +266,32 @@ namespace RDBMS.Engine
                 var rows1 = t1.SelectAll();
                 var rows2 = t2.SelectAll();
 
-                foreach (var r1 in rows1)
-                {
-                    foreach (var r2 in rows2)
-                    {
+                foreach (var r1 in rows1) {
+                    foreach (var r2 in rows2) {
                         var val1 = r1.Data.ContainsKey(t1Col) ? r1.Data[t1Col] : null;
                         var val2 = r2.Data.ContainsKey(t2Col) ? r2.Data[t2Col] : null;
 
                         // Basic Equality Check (converting to string to be safe)
-                        if (val1 != null && val2 != null && val1.ToString() == val2.ToString())
-                        {
+                        if (val1 != null && val2 != null && val1.ToString() == val2.ToString()) {
                             results.Append($"{r1.Data["id"]} | "); // Show ID
                             // Dump data from T1
-                            foreach(var kvp in r1.Data) if(kvp.Key != "id") results.Append($"{kvp.Value}, ");
+                            foreach (var kvp in r1.Data) if (kvp.Key != "id") results.Append($"{kvp.Value}, ");
                             results.Append(" <-> ");
                             // Dump data from T2
-                            foreach(var kvp in r2.Data) if(kvp.Key != "id") results.Append($"{kvp.Value}, ");
+                            foreach (var kvp in r2.Data) if (kvp.Key != "id") results.Append($"{kvp.Value}, ");
                             results.AppendLine();
                         }
                     }
                 }
                 return results.ToString();
             }
-            catch (Exception ex)
-            {
+            catch (Exception ex) {
                 return $"Error parsing JOIN syntax: {ex.Message}";
             }
         }
 
         private string FormatRow(Row row) => System.Text.Json.JsonSerializer.Serialize(row.Data);
-        private string FormatRows(List<Row> rows) 
-        {
+        private string FormatRows(List<Row> rows) {
             var sb = new StringBuilder();
             foreach (var r in rows) sb.AppendLine(FormatRow(r));
             return sb.ToString();

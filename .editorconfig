@@ -1,0 +1,5 @@
+root = true
+
+[*.cs]
+# Disable new line before open brace for all elements (methods, control blocks, etc.)
+csharp_new_line_before_open_brace = none
