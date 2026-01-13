@@ -14,27 +14,30 @@ namespace RDBMS.Engine
         {
             Name = name;
 
-             var userCols = new List<ColumnDef> 
-            { 
-                new ColumnDef { Name = "id", Type = DbType.Int, IsPrimaryKey = true },
-                new ColumnDef { Name = "username", Type = DbType.String },
-                new ColumnDef { Name = "age", Type = DbType.Int }
-            };
-            Tables.Add("users", new Table(Name, "users", userCols));
-
-            var orderCols = new List<ColumnDef>
+            if (Name == "default")
             {
-                new ColumnDef { Name = "id", Type = DbType.Int, IsPrimaryKey = true },
-                new ColumnDef { Name = "user_id", Type = DbType.Int }, 
-                new ColumnDef { Name = "item", Type = DbType.String }
-            };
-            Tables.Add("orders", new Table(Name, "orders", orderCols));
+                var userCols = new List<ColumnDef> 
+                { 
+                    new ColumnDef { Name = "id", Type = DbType.Int, IsPrimaryKey = true },
+                    new ColumnDef { Name = "username", Type = DbType.String },
+                    new ColumnDef { Name = "age", Type = DbType.Int }
+                };
+                Tables.Add("users", new Table(Name, "users", userCols));
 
-            if (Tables["users"].SelectAll().Count == 0)
-            {
-                ExecuteSql("INSERT INTO users VALUES (001, \"John Doe\", 25)");
-                ExecuteSql("INSERT INTO users VALUES (002, \"Jane Smith\", 30)");
-                ExecuteSql("INSERT INTO orders VALUES (101, 001, \"Laptop\")");
+                var orderCols = new List<ColumnDef>
+                {
+                    new ColumnDef { Name = "id", Type = DbType.Int, IsPrimaryKey = true },
+                    new ColumnDef { Name = "user_id", Type = DbType.Int }, 
+                    new ColumnDef { Name = "item", Type = DbType.String }
+                };
+                Tables.Add("orders", new Table(Name, "orders", orderCols));
+
+                if (Tables["users"].SelectAll().Count == 0)
+                {
+                    ExecuteSql("INSERT INTO users VALUES (001, \"John Doe\", 25)");
+                    ExecuteSql("INSERT INTO users VALUES (002, \"Jane Smith\", 30)");
+                    ExecuteSql("INSERT INTO orders VALUES (101, 001, \"Laptop\")");
+                }
             }
         }
 
