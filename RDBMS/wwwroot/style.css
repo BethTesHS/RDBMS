@@ -87,14 +87,14 @@ body {
     cursor: pointer;
     border-bottom: 2px solid transparent;
     transition: color 0.2s, border-color 0.2s;
-    color: #64748b;
+    color: var(--accent-blue);
     font-weight: 500;
 }
 .tab-item:hover {
     color: var(--text-color);
 }
 .tab-item.active {
-    color: var(--accent-blue);
+    color: var(--accent-red);
     border-bottom-color: var(--accent-red);
 }
 
@@ -119,9 +119,9 @@ body {
 }
 .btn {
     background-color: var(--accent-blue);
+    border: 2px solid var(--accent-blue);
     color: #ffffff;
     padding: 12px 24px;
-    border: none;
     border-radius: 6px;
     font-weight: bold;
     cursor: pointer;

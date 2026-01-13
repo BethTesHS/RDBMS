@@ -114,7 +114,19 @@ async function refreshTables() {
                 btn.className = 'btn btn-outline';
                 btn.style = 'font-size: 0.8rem; padding: 5px 10px; margin-right: 5px; margin-bottom: 5px;';
                 btn.textContent = t;
-                btn.onclick = () => loadTable(t);
+                
+                btn.onclick = () => {
+                    // 1. Reset all buttons to outline
+                    const allBtns = container.querySelectorAll('button');
+                    allBtns.forEach(b => b.classList.add('btn-outline'));
+
+                    // 2. Set this button to solid (remove outline class)
+                    btn.classList.remove('btn-outline');
+
+                    // 3. Load data
+                    loadTable(t);
+                };
+                
                 container.appendChild(btn);
             });
         }
