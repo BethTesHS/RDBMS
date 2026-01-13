@@ -5,15 +5,25 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SQLly</title>
     <link rel="stylesheet" href="/style.css">
+    <link rel="icon" href="/images/logo-small.png" type="image/x-icon">
 </head>
 <body>
 
     <div class="sidebar">
         <div class="logo">SQL<span>ly</span></div>
-        <div style="margin-top: 0px; font-weight: bold; color: #64748b; font-size: 0.8rem;">DATABASES</div>
+        <div style="margin-top: 0px; font-weight: bold; opacity: 0.7; font-size: 0.8rem;">DATABASES</div>
         <div class="db-list" id="dbList">
             </div>
-        <button class="btn" style="width: 100%; margin: 0; margin-top: 10px; font-size: 0.8rem;" onclick="createNewDb()">+ New Database</button>
+        
+        <div class="theme-switch-wrapper">
+             <label class="theme-switch" for="checkbox">
+                <input type="checkbox" id="checkbox" onclick="toggleDarkMode()">
+                <div class="slider"></div>
+            </label>
+            <span id="theme-label" style="font-size: 0.9rem; margin-left: 10px; opacity: 0.8;">Light Mode</span>
+        </div>
+
+        <button class="btn" style="width: 100%; margin: 0; font-size: 0.8rem;" onclick="createNewDb()">+ New Database</button>
     </div>
 
     <div class="main">
@@ -28,7 +38,7 @@
         <div id="home" class="section active">
             <div class="hero">
                 <h1>Welcome to SQLly</h1>
-                <p style="color: #94a3b8; max-width: 600px; margin: 0 auto 30px auto;">
+                <p style="max-width: 600px; margin: 0 auto 30px auto;">
                     A lightweight, file-based Relational Database Management System running on .NET 9.0.
                     Select a database to start querying or analyze data in the Table View.
                 </p>
@@ -43,9 +53,7 @@
         <div id="console" class="section">
             <h2 id="consoleTitle">default</h2>
             <div class="console-container">
-                <div class="console-output" id="output"> 
-                    Welcome to SQLly Web Console. Type SQLly commands (e.g., SELECT * FROM users)
-                </div>
+                <div class="console-output" id="output">Welcome to SQLly Web Console. Type SQLly commands (e.g., SELECT * FROM users)</div>
                 <div class="console-input-line">
                     <span class="prompt">SQL&gt;</span>
                     <input type="text" class="cmd-input" id="cmdInput" placeholder="Type command..." autofocus>
@@ -56,17 +64,17 @@
         <div id="debug" class="section">
             <h2 id="debugTitle">default</h2>
             <div style="margin-bottom: 20px;" id="tableList">
-                <span style="color: #64748b;">Loading tables...</span>
+                <span style="opacity: 0.7;">Loading tables...</span>
             </div>
             <div id="tableContainer">
-                <p style="color: #64748b;">Select a table above to view raw data.</p>
+                <p style="opacity: 0.7;">Select a table above to view raw data.</p>
             </div>
         </div>
 
         <div id="tutorial" class="section">
             <h2>SQLly Command Tutorial</h2>
             <div style="max-width: 800px; line-height: 1.6;">
-                <p style="color: #94a3b8; margin-bottom: 20px;">
+                <p style="opacity: 0.7; margin-bottom: 20px;">
                     Below is a guide to the SQLly commands. 
                     Copy and paste these into the Console to try them out.
                 </p>
@@ -78,10 +86,10 @@
                     Supported types are <code>int</code> and <code>string</code>.
                 </p>
                 <div class="console-container" style="padding: 15px; margin-bottom: 20px; min-height: auto;">
-                    <span style="color: #64748b;">-- Syntax: CREATE TABLE [name] (col1 type, col2 type)</span>
+                    <span style="opacity: 0.7;">-- Syntax: CREATE TABLE [name] (col1 type, col2 type)</span>
                     CREATE TABLE products (id int, name string, price int)
                     
-                    <span style="color: #64748b;">-- Delete a table and all its data</span>
+                    <span style="opacity: 0.7;">-- Delete a table and all its data</span>
                     DROP TABLE products
                 </div>
 
@@ -95,11 +103,11 @@
                 <h3 class="tutorial-list">3. Read (Select)</h3>                
                 <p>View data from your tables. You can filter by ID or join tables.</p>                
                 <div class="console-container" style="padding: 15px; margin-bottom: 20px; min-height: auto;">
-                    <span style="color: #64748b;">-- Select all columns</span>
+                    <span style="opacity: 0.7;">-- Select all columns</span>
                     SELECT * FROM products
-                    <span style="color: #64748b;">-- Filter by ID</span>
+                    <span style="opacity: 0.7;">-- Filter by ID</span>
                     SELECT * FROM products WHERE id=1
-                    <span style="color: #64748b;">-- Join (Example using users and orders)</span>
+                    <span style="opacity: 0.7;">-- Join (Example using users and orders)</span>
                     SELECT * FROM users JOIN orders ON users.id = orders.user_id
                 </div>
 

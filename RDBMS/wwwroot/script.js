@@ -1,5 +1,21 @@
 let currentDb = 'default';
 
+// --- Theme Management ---
+function toggleDarkMode() {
+    const checkbox = document.getElementById('checkbox');
+    const label = document.getElementById('theme-label');
+    
+    if (checkbox.checked) {
+        document.body.classList.add('dark-mode');
+        localStorage.setItem('theme', 'dark');
+        if(label) label.textContent = 'Dark Mode';
+    } else {
+        document.body.classList.remove('dark-mode');
+        localStorage.setItem('theme', 'light');
+        if(label) label.textContent = 'Light Mode';
+    }
+}
+
 // --- Navigation ---
 function showSection(id) {
     document.querySelectorAll('.section').forEach(el => el.classList.remove('active'));
@@ -46,7 +62,7 @@ function switchDb(name) {
     document.getElementById('output').innerText += `\n[Switched to ${name}]\n`;
     
     // Clear the table data view so previous DB data doesn't persist
-    document.getElementById('tableContainer').innerHTML = '<p style="color: #64748b;">Select a table above to view raw data.</p>';
+    document.getElementById('tableContainer').innerHTML = '<p style="opacity: 0.7;">Select a table above to view raw data.</p>';
 
     fetchDbs(); 
     refreshTables();
@@ -54,6 +70,17 @@ function switchDb(name) {
 
 // --- Console ---
 document.addEventListener('DOMContentLoaded', () => {
+    // Check Theme Preference on Load
+    const theme = localStorage.getItem('theme');
+    const checkbox = document.getElementById('checkbox');
+    const label = document.getElementById('theme-label');
+
+    if (theme === 'dark') {
+        document.body.classList.add('dark-mode');
+        if(checkbox) checkbox.checked = true;
+        if(label) label.textContent = 'Dark Mode';
+    }
+
     const cmdInput = document.getElementById('cmdInput');
     if (cmdInput) {
         cmdInput.addEventListener('keypress', async function (e) {
@@ -106,7 +133,7 @@ async function refreshTables() {
             const tables = await res.json();
             container.innerHTML = '';
             if(tables.length === 0) {
-                container.innerHTML = '<span style="color: #64748b;">No tables found.</span>';
+                container.innerHTML = '<span style="opacity: 0.7;">No tables found.</span>';
                 return;
             }
             tables.forEach(t => {
