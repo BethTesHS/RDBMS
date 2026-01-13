@@ -19,13 +19,13 @@ namespace RDBMS.Engine
                 // Give the web server a second to start logs
                 System.Threading.Thread.Sleep(1000); 
                 Console.WriteLine("\n=================================");
-                Console.WriteLine("   SQL-ly REPL READY");
+                Console.WriteLine("   SQLly REPL READY");
                 Console.WriteLine("   Try: INSERT INTO users VALUES (1, \"Admin\", 99)");
                 Console.WriteLine("=================================\n");
 
                 while (true)
                 {
-                    Console.Write("SQL-ly> ");
+                    Console.Write("SQLly> ");
                     var input = Console.ReadLine();
                     if (string.IsNullOrWhiteSpace(input)) continue;
                     if (input == "exit") break;

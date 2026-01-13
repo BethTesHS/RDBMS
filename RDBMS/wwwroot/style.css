@@ -1,14 +1,28 @@
-:root {
+/* :root {
     --bg-color: #0f172a;
     --card-bg: #1e293b;
     --text-color: #e2e8f0;
-    --accent: #38bdf8;
+    --accent-blue: #38bdf8;
     --console-bg: #000000;
     --console-text: #22c55e;
     --border: #334155;
+} */
+
+:root {
+    --bg-color: #f1f5f9;
+    --card-bg: #ffffff;
+    --text-color: #0f172a;
+    --accent-blue: #064dae;
+    --accent-red: #a81414;
+    
+    --console-bg: #e2e8f0;
+    --console-text: #15803d;
+    --console-input-text: #0f172a;
+    
+    --border: #cbd5e1;
 }
 body {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-family: "Nunito Sans", sans-serif;
     background-color: var(--bg-color);
     color: var(--text-color);
     margin: 0;
@@ -25,10 +39,15 @@ body {
     flex-direction: column;
 }
 .logo {
-    font-size: 1.5rem;
+    font-size: 32px;
     font-weight: bold;
-    color: var(--accent);
+    color: var(--accent-blue);
     margin-bottom: 2rem;
+}
+.logo span{
+    font-size: 24px;
+
+    color: var(--accent-red);
 }
 
 /* Database List Styles */
@@ -44,7 +63,7 @@ body {
     border-left: 2px solid transparent;
 }
 .db-item:hover, .db-item.active {
-    border-left-color: var(--accent);
+    border-left-color: var(--accent-blue);
     background: rgba(255,255,255,0.05);
 }
 
@@ -68,15 +87,15 @@ body {
     cursor: pointer;
     border-bottom: 2px solid transparent;
     transition: color 0.2s, border-color 0.2s;
-    color: #94a3b8;
+    color: #64748b;
     font-weight: 500;
 }
 .tab-item:hover {
     color: var(--text-color);
 }
 .tab-item.active {
-    color: var(--accent);
-    border-bottom-color: var(--accent);
+    color: var(--accent-blue);
+    border-bottom-color: var(--accent-red);
 }
 
 /* Sections */
@@ -94,9 +113,13 @@ body {
     text-align: center;
     margin-top: 10vh;
 }
+
+.hero p {
+    color: #475569 !important; /* Enforce darker gray for description text */
+}
 .btn {
-    background-color: var(--accent);
-    color: #000;
+    background-color: var(--accent-blue);
+    color: #ffffff;
     padding: 12px 24px;
     border: none;
     border-radius: 6px;
@@ -111,8 +134,8 @@ body {
 }
 .btn-outline {
     background: transparent;
-    border: 2px solid var(--accent);
-    color: var(--accent);
+    border: 2px solid var(--accent-red);
+    color: var(--accent-red);
 }
 
 /* Console */
@@ -140,17 +163,21 @@ body {
     border-top: 1px solid #333;
     padding-top: 10px;}
 .prompt {
-    color: var(--accent);
+    color: var(--accent-blue);
     margin-right: 10px;
 }
 input.cmd-input {
     background: transparent;
     border: none;
-    color: #fff;
+    color: var(--console-input-text);
     flex-grow: 1;
     font-family: inherit;
     font-size: 1rem;
     outline: none;
+}
+
+.tutorial-list {
+    color: var(--accent-blue);
 }
 
 /* Tables (Table View) */
@@ -166,5 +193,5 @@ th, td {
 }
 th {
     background-color: var(--card-bg);
-    color: var(--accent);
+    color: var(--accent-blue);
 }

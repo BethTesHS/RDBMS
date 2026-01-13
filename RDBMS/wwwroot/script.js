@@ -63,7 +63,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 
                 // Print Command
                 const out = document.getElementById('output');
-                out.innerText += `\nSQL> ${sql}\n`;
+                out.innerText += `\nSQLly> ${sql}\n`;
                 this.value = '';
 
                 // Execute
