@@ -34,8 +34,6 @@ go mod tidy
 
 ```
 
-
-
 ## How to Run
 
 ### Using the Command Line (CLI)
